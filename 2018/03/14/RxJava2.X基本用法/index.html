@@ -9,7 +9,7 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
-    <title>wolf_tian 的个人博客</title>
+    <title>RXJava 2.X基本用法 · wolf_tian 的个人博客</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -251,12 +251,23 @@
 </head>
 
     
+        <body class="post-body">
+    
     
 <header class="header">
 
     <div class="read-progress"></div>
     <div class="header-sidebar-menu">&#xe775;</div>
     <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >wolf_tian 的博客.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">RXJava 2.X基本用法</a>
+            </div>
+    </div>
     
     <a class="home-link" href=/>wolf_tian 的博客.</a>
 </header>
@@ -270,105 +281,133 @@
 
 
 
+height:50vh;
+
 >
     
     <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
             
-    <div class="site-intro-img" style="background-image: url(/)"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
     <div class="site-intro-placeholder"></div>
     <div class="site-intro-meta">
         <!-- 标题  -->
         <h1 class="intro-title">
             <!-- 主页  -->
             
+            RXJava 2.X基本用法
+            <!-- 404 -->
+            
         </h1>
         <!-- 副标题 -->
         <p class="intro-subtitle">
             <!-- 主页副标题  -->
             
+            
+            <!-- 404 -->
+            
         </p>
         <!-- 文章页meta -->
+        
+            <!-- 文章页标签  -->
+            
+            <div class="post-intro-meta">
+                <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                <span class="post-intro-time">2018/03/14</span>
+                
+                <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                    <span class="iconfont-archer">&#xe602;</span>
+                    <span id="busuanzi_value_page_pv"></span>
+                </span>
+                
+                <span class="shareWrapper">
+                    <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                    <span class="shareText">Share</span>
+                    <ul class="shareList">
+                        <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                            <div class="share-qrcode"></div>
+                        </li>
+                        <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                        <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                        <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                        <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                    </ul>
+                </span>
+            </div>
         
     </div>
 </div>
         <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
 
         <div class="container container-unloaded">
-            <main class="main index-page">
-    
-    
-    
-        <article class="index-post">
-            <a class="abstract-title" href = "/2018/03/14/RxJava2.X基本用法/" >
-                
-                    <span>RXJava 2.X基本用法</span>
-            </a>
-            <div class="abstract-content">
-                1. 基本使用1.1 方式1：分步骤实现1.1.1使用步骤
-步骤1：创建被观察者(Observable)&amp; 生产事件
-步骤2：创建观察者 （Observer ）并 定义响应事件的行为
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="1-基本使用"><a href="#1-基本使用" class="headerlink" title="1. 基本使用"></a>1. 基本使用</h1><h2 id="1-1-方式1：分步骤实现"><a href="#1-1-方式1：分步骤实现" class="headerlink" title="1.1 方式1：分步骤实现"></a>1.1 方式1：分步骤实现</h2><h3 id="1-1-1使用步骤"><a href="#1-1-1使用步骤" class="headerlink" title="1.1.1使用步骤"></a>1.1.1使用步骤</h3><ul>
+<li>步骤1：创建被观察者(<strong><font color="#ff0000">Observable</font></strong>)&amp; 生产事件</li>
+<li><p>步骤2：创建观察者 （<strong><font color="#ff0000">Observer</font></strong> ）并 定义响应事件的行为</p>
+<ul>
+<li>发生的事件类型包括：Next事件、Complete事件 &amp; Error事件。具体如下：<br>|事件类型 | 定义 | 作用 | 使用规则 | 使用方法|<br>|—|—|—|—|—|<br>|Next | 普通事件 |  向观察者发送需要响应事件信号 | 被观察者可以发送无限个Next事件；观察者可以接受无限个Next事件 | onNext()|<br>|Complete | 事件队列完成事件 | 1.标志被观察者不再发送普通事件(Next) | 当被观察者发送了一个Complete事件后：被观察者在Complete事件后的事件将会继续发送，但观察者收到Complete事件后将不再继续接受任何事件2.被观察者可以不发送Complete事件 | onCompleted()|<br>|Error | 事件队列异常事件 |标志事件处理过程中出现异常(<strong>此时队列自动终止,不允许再有事件发出</strong>) | 1.当被观察者发送了一个Error事件后：被观察者在Error事件后的事件将会继续发送，但观察者收到Error事件后将不再继续接受任何事件2.被观察者可以不发送Error事件 | onError()|</li>
+</ul>
+</li>
+<li><p>具体实现</p>
+<ul>
+<li>方式1：采用Observer 接口<ul>
+<li>创建观察者(Observer)对象<br><code>Observer<string> observer = new Observer<string>() {}</string></string></code></li>
+<li>创建对象时通过对应复写对应事件方法从而响应对应事件<ul>
+<li>1.观察者接收事件前，默认最先调用复写 onSubscribe()</li>
+<li>2.当被观察者生产Next事件 &amp; 观察者接收到时，会调用onNext()方法进行响应</li>
+<li>3.当被观察者生产Error事件&amp; 观察者接收到时，会调用onError()方法进行响应</li>
+<li>4.当被观察者生产Complete事件&amp; 观察者接收到时，会调用onComplete()方法进行响应</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>方式2：采用Subscriber 抽象类<br><em>说明：Subscriber类 = RxJava 内置的一个实现了 Observer 的抽象类，对 Observer 接口进行了扩展</em><ul>
+<li>创建观察者(Observer)对象<br><code>Observer<string> observer = new Observer<string>() {}</string></string></code></li>
+<li>创建对象时通过对应复写对应事件方法从而响应对应事件<ul>
+<li>1.观察者接收事件前，默认最先调用复写 onSubscribe()</li>
+<li>2.当被观察者生产Next事件 &amp; 观察者接收到时，会调用onNext()方法进行响应</li>
+<li>3.当被观察者生产Error事件&amp; 观察者接收到时，会调用onError()方法进行响应</li>
+<li>4.当被观察者生产Complete事件&amp; 观察者接收到时，会调用onComplete()方法进行响应</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong><font color="#ff0000">特别注意：2种方法的区别，即Subscriber 抽象类与Observer 接口的区别</font></strong></p>
 
-发生的事件类型包括：Next事件、Complete事件 &amp; Error事件。具体如下：|事件类型 | 定义 | 作用 | 使用规则 | 使用方法||—|—|—|—|—||Next | 普通事件 |  向观察者发送需要响应事件信号 | 被观察者可以发送无限个Next事件；观察者可以接受无限个Next事件 | onNext()||Complete | 事件队列完成事件 | 1.标志被观察者不再...
-            </div>
-            <div class="abstract-post-meta">
-                <!-- date  -->
-                <div class="abstract-date">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/03/14</span>
-                </div>
-                <!-- tags  -->
-                
-            </div>
-        </article>
-    
-    
-    
-        <article class="index-post">
-            <a class="abstract-title" href = "/2018/03/13/RxJava 2.X/" >
-                
-                    <span>RXJava 2.X</span>
-            </a>
-            <div class="abstract-content">
-                
-基本使用
+    </article>
+    <!-- 前后页  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2018/03/13/RxJava 2.X/" title= RXJava 2.X >
+                    <div class="prevTitle">RXJava 2.X</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
 
-1.1 方式1：分步骤实现1.1.1 使用步骤步骤1：创建被观察者 （Observable ）&amp; 生产事件步骤2：创建观察者 （Observer ）并 定义响应事件的行为•    发生的事件类型包括：Next事件、Complete事件 &amp; Error事件。具体如下：事件类型    定义    作用    使用规则    使用方法Next    普通事件    向观察者发送需要响应事件信号    被观察者可以发送无限个Next事件；观察者可以接受无限个Next事件    onNext()Complete    事件队列完成事件    标志被观察者不再发送普通事...
-            </div>
-            <div class="abstract-post-meta">
-                <!-- date  -->
-                <div class="abstract-date">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/03/13</span>
-                </div>
-                <!-- tags  -->
-                
-            </div>
-        </article>
+<!-- City版安装代码已完成 -->
     
     
+    <!--PC版-->
+
+    <!--PC版-->
+
+
     
-        <article class="index-post">
-            <a class="abstract-title" href = "/2018/03/13/hello-world/" >
-                
-                    <span>Hello World</span>
-            </a>
-            <div class="abstract-content">
-                Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick StartCreate a new post1$ hexo new "My New Post"
-More info: Writing
-Run server1$ hexo server
-More...
-            </div>
-            <div class="abstract-post-meta">
-                <!-- date  -->
-                <div class="abstract-date">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/03/13</span>
-                </div>
-                <!-- tags  -->
-                
-            </div>
-        </article>
-    
-    <!-- paginator  -->
-    
+    <!-- 评论 -->
 </main>
             <!-- profile -->
             
@@ -441,6 +480,24 @@ More...
 </footer>
     </div>
     <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-基本使用"><span class="toc-number">1.</span> <span class="toc-text">1. 基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-方式1：分步骤实现"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 方式1：分步骤实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1使用步骤"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1.1使用步骤</span></a></li></ol></li></ol></li></ol>
+    </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
     <div class="sidebar sidebar-hide">
@@ -580,6 +637,8 @@ jsonContent:
     
     </div>
     <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
     
     </body>
 </html>
