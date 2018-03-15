@@ -314,63 +314,15 @@ height:50vh;
     
     
         <article class="index-post">
-            <a class="abstract-title" href = "/2018/03/14/RxJava2.X基本用法/" >
+            <a class="abstract-title" href = "/2018/03/13/RxJava2.X基本用法(一)/" >
                 
-                    <span>RXJava 2.X基本用法</span>
+                    <span>RXJava 2.X基本用法(一)</span>
             </a>
             <div class="abstract-content">
-                1. 基本使用1.1 方式1：分步骤实现1.1.1使用步骤
-步骤1：创建被观察者(Observable)&amp; 生产事件
-步骤2：创建观察者 （Observer ）并 定义响应事件的行为
+                1.基本概念要想理解好RxJava，首先有几个关键概念需要我们理解清楚。由于RxJava是利用观察者模式来实现一些列的操作，所以对于观察者模式中的观察者，被观察者，以及订阅、事件需要有一个了解。如果第一次看完是一脸懵逼，那很正常，不要慌，记得这几个概念就好~后面我会慢慢的带你们走进去跟走出来。
 
-发生的事件类型包括：Next事件、Complete事件 &amp; Error事件。具体如下：|事件类型 | 定义 | 作用 | 使用规则 | 使用方法||—|—|—|—|—||Next | 普通事件 |  向观察者发送需要响应事件信号 | 被观察者可以发送无限个Next事件；观察者可以接受无限个Next事件 | onNext()||Complete | 事件队列完成事件 | 1.标志被观察者不再...
-            </div>
-            <div class="abstract-post-meta">
-                <!-- date  -->
-                <div class="abstract-date">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/03/14</span>
-                </div>
-                <!-- tags  -->
-                
-            </div>
-        </article>
-    
-    
-    
-        <article class="index-post">
-            <a class="abstract-title" href = "/2018/03/13/RxJava 2.X/" >
-                
-                    <span>RXJava 2.X</span>
-            </a>
-            <div class="abstract-content">
-                
-基本使用
-
-1.1 方式1：分步骤实现1.1.1 使用步骤步骤1：创建被观察者 （Observable ）&amp; 生产事件步骤2：创建观察者 （Observer ）并 定义响应事件的行为•    发生的事件类型包括：Next事件、Complete事件 &amp; Error事件。具体如下：事件类型    定义    作用    使用规则    使用方法Next    普通事件    向观察者发送需要响应事件信号    被观察者可以发送无限个Next事件；观察者可以接受无限个Next事件    onNext()Complete    事件队列完成事件    标志被观察者不再发送普通事...
-            </div>
-            <div class="abstract-post-meta">
-                <!-- date  -->
-                <div class="abstract-date">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/03/13</span>
-                </div>
-                <!-- tags  -->
-                
-            </div>
-        </article>
-    
-    
-    
-        <article class="index-post">
-            <a class="abstract-title" href = "/2018/03/13/hello-world/" >
-                
-                    <span>Hello World</span>
-            </a>
-            <div class="abstract-content">
-                Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick StartCreate a new post1$ hexo new "My New Post"
-More info: Writing
-Run server1$ hexo server
-More...
+被观察者： Observable在观察者模式中称为“被观察者”,用于创造事件；
+观察者： Observer观察者模式中的“观察者”，可接收Observable发送的事件,定义响应事件的行为；订阅：subscribe，用于连接观察者与被观察者；Subscriber：也可以是一种观察者，在2.X中 ...
             </div>
             <div class="abstract-post-meta">
                 <!-- date  -->
@@ -401,7 +353,7 @@ More...
     
         
             
-                <a href="mailto:tianchenggen@163.com" class="iconfont-archer email" title=email ></a>
+                <a href="mailto:wolf_tian@qq.com" class="iconfont-archer email" title=email ></a>
             
         
     
@@ -412,14 +364,14 @@ More...
         
     
         
+    
+        
             
-                <span class="iconfont-archer wechat" title=wechat>
+                <span class="iconfont-archer qq" title=qq>
                   
-                  <img class="profile-qr" src="/assets/example_qr.png" />
+                  <img class="profile-qr" src="/assets/qq_img.png" />
                 </span>
             
-        
-    
         
     
         
@@ -483,7 +435,7 @@ More...
     
         
             
-                <a href="mailto:tianchenggen@163.com" class="iconfont-archer email" title=email ></a>
+                <a href="mailto:wolf_tian@qq.com" class="iconfont-archer email" title=email ></a>
             
         
     
@@ -494,14 +446,14 @@ More...
         
     
         
+    
+        
             
-                <span class="iconfont-archer wechat" title=wechat>
+                <span class="iconfont-archer qq" title=qq>
                   
-                  <img class="profile-qr" src="/assets/example_qr.png" />
+                  <img class="profile-qr" src="/assets/qq_img.png" />
                 </span>
             
-        
-    
         
     
         
@@ -565,23 +517,7 @@ More...
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <div class="total-archive"> Total : 3 </div>
+    <div class="total-archive"> Total : 1 </div>
     
     <div class="post-archive">
     
@@ -593,35 +529,7 @@ More...
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/03/13/hello-world/" >Hello World</a>
-        </li>
-    
-    
-    
-    
-    
-        </ul>
-    
-    <div class="archive-year"> Invalid date </div>
-    <ul class="year-list">
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/03/13/RxJava 2.X/" >RXJava 2.X</a>
-        </li>
-    
-    
-    
-    
-    
-        </ul>
-    
-    <div class="archive-year"> Invalid date </div>
-    <ul class="year-list">
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/03/14/RxJava2.X基本用法/" >RXJava 2.X基本用法</a>
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/03/13/RxJava2.X基本用法(一)/" >RXJava 2.X基本用法(一)</a>
         </li>
     
     </div>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+    <!-- title -->
+
+
+
+
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
+    <title>RXJava 2.X基本用法(一) · wolf_tian 的个人博客</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+        box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.7);
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s 1;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= /css/style.css?v=20180311 as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" type="text/css" href= /css/mobile.css?v=20180311 media="(max-width: 980px)"/>
+    <link rel="icon" href= /assets/psu1.jpg>
+    <script>
+  // load webfont-loader async, and add callback function
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+  
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntroTags = document.getElementsByClassName('post-intro-tags')[0],
+        postIntroMeat = document.getElementsByClassName('post-intro-meta')[0];
+      if (postIntroTags) {
+        postIntroTags.classList.add('post-fade-in');
+      }
+      if (postIntroMeat) {
+        postIntroMeat.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  async("https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", asyncCb)
+</script>
+    <script>
+        (function (w) {
+            "use strict";
+            // rel=preload support test
+            if (!w.loadCSS) {
+                w.loadCSS = function () { };
+            }
+            // define on the loadCSS obj
+            var rp = loadCSS.relpreload = {};
+            // rel=preload feature support test
+            // runs once and returns a function for compat purposes
+            rp.support = (function () {
+                var ret;
+                try {
+                    ret = w.document.createElement("link").relList.supports("preload");
+                } catch (e) {
+                    ret = false;
+                }
+                return function () {
+                    return ret;
+                };
+            })();
+
+            // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+            // then change that media back to its intended value on load
+            rp.bindMediaToggle = function (link) {
+                // remember existing media attr for ultimate state, or default to 'all'
+                var finalMedia = link.media || "all";
+
+                function enableStylesheet() {
+                    link.media = finalMedia;
+                }
+
+                // bind load handlers to enable media
+                if (link.addEventListener) {
+                    link.addEventListener("load", enableStylesheet);
+                } else if (link.attachEvent) {
+                    link.attachEvent("onload", enableStylesheet);
+                }
+
+                // Set rel and non-applicable media type to start an async request
+                // note: timeout allows this to happen async to let rendering continue in IE
+                setTimeout(function () {
+                    link.rel = "stylesheet";
+                    link.media = "only x";
+                });
+                // also enable media after 3 seconds,
+                // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+                setTimeout(enableStylesheet, 3000);
+            };
+
+            // loop through link elements in DOM
+            rp.poly = function () {
+                // double check this to prevent external calls from running
+                if (rp.support()) {
+                    return;
+                }
+                var links = w.document.getElementsByTagName("link");
+                for (var i = 0; i < links.length; i++) {
+                    var link = links[i];
+                    // qualify links to those with rel=preload and as=style attrs
+                    if (link.rel === "preload" && link.getAttribute("as") === "style" && !link.getAttribute("data-loadcss")) {
+                        // prevent rerunning on link
+                        link.setAttribute("data-loadcss", true);
+                        // bind listeners to toggle media back
+                        rp.bindMediaToggle(link);
+                    }
+                }
+            };
+
+            // if unsupported, run the polyfill
+            if (!rp.support()) {
+                // run once at least
+                rp.poly();
+
+                // rerun poly on an interval until onload
+                var run = w.setInterval(rp.poly, 500);
+                if (w.addEventListener) {
+                    w.addEventListener("load", function () {
+                        rp.poly();
+                        w.clearInterval(run);
+                    });
+                } else if (w.attachEvent) {
+                    w.attachEvent("onload", function () {
+                        rp.poly();
+                        w.clearInterval(run);
+                    });
+                }
+            }
+            // commonjs
+            if (typeof exports !== "undefined") {
+                exports.loadCSS = loadCSS;
+            }
+            else {
+                w.loadCSS = loadCSS;
+            }
+        }(typeof global !== "undefined" ? global : this));
+    </script>
+    <script src="//cdn.staticfile.org/jquery/3.2.1/jquery.min.js" defer></script>
+    <script src="/scripts/main.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >wolf_tian 的博客.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">RXJava 2.X基本用法(一)</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>wolf_tian 的博客.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style=
+
+
+
+
+
+
+
+
+height:50vh;
+
+>
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            RXJava 2.X基本用法(一)
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <!-- 文章页标签  -->
+            
+            <div class="post-intro-meta">
+                <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                <span class="post-intro-time">2018/03/13</span>
+                
+                <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                    <span class="iconfont-archer">&#xe602;</span>
+                    <span id="busuanzi_value_page_pv"></span>
+                </span>
+                
+                <span class="shareWrapper">
+                    <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                    <span class="shareText">Share</span>
+                    <ul class="shareList">
+                        <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                            <div class="share-qrcode"></div>
+                        </li>
+                        <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                        <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                        <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                        <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                    </ul>
+                </span>
+            </div>
+        
+    </div>
+</div>
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="1-基本概念"><a href="#1-基本概念" class="headerlink" title="1.基本概念"></a>1.基本概念</h1><p>要想理解好RxJava，首先有几个关键概念需要我们理解清楚。由于RxJava是利用观察者模式来实现一些列的操作，所以对于观察者模式中的观察者，被观察者，以及订阅、事件需要有一个了解。如果第一次看完是一脸懵逼，那很正常，不要慌，记得这几个概念就好~后面我会慢慢的带你们走进去跟走出来。</p>
+<ul>
+<li><strong>被观察者</strong>： <font color="#ff0000">Observable</font>在观察者模式中称为“被观察者”,用于创造事件；</li>
+<li><strong>观察者</strong>： <font color="#ff0000">Observer</font>观察者模式中的“观察者”，可接收Observable发送的事件,定义响应事件的行为；<br><strong>订阅</strong>：<font color="#ff0000">subscribe</font>，用于连接观察者与被观察者；<br><strong>Subscriber</strong>：也可以是一种观察者，在2.X中 它与Observer没什么实质的区别，不同的是 Subscriber要与Flowable(也是一种被观察者)联合使用，该部分内容是2.X新增的，后续文章再介绍。Obsesrver用于订阅Observable，而Subscriber用于订阅Flowable</li>
+</ul>
+<h1 id="2-基本使用"><a href="#2-基本使用" class="headerlink" title="2. 基本使用"></a>2. 基本使用</h1><p><img src="https://i.imgur.com/4L97dKg.png" alt=""></p>
+<h2 id="2-1-实现方式1：分步实现"><a href="#2-1-实现方式1：分步实现" class="headerlink" title="2.1 实现方式1：分步实现"></a>2.1 实现方式1：分步实现</h2><h3 id="2-1-1步骤1：创建被观察者-Observable-并生产事件"><a href="#2-1-1步骤1：创建被观察者-Observable-并生产事件" class="headerlink" title="2.1.1步骤1：创建被观察者(Observable)并生产事件"></a>2.1.1步骤1：创建被观察者(<strong><font color="#ff0000">Observable</font></strong>)并生产事件</h3><ul>
+<li>具体实现<br>  <em>Observable的创建方式很多,我们这边介绍最基本的create创建方式,其他的创建方式后续介绍</em><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Observable&lt;String&gt; observable = Observable.create(<span class="keyword">new</span> ObservableOnSubscribe&lt;String&gt;() &#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(@NonNull ObservableEmitter&lt;String&gt; e)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		e.onNext(<span class="string">"产生事件1"</span>);</span><br><span class="line">		System.out.println( <span class="string">"Observable emit 1"</span> + <span class="string">"\n"</span>);</span><br><span class="line">		e.onNext(<span class="string">"产生事件2"</span>);</span><br><span class="line">              System.out.println( <span class="string">"Observable emit 2"</span> + <span class="string">"\n"</span>);</span><br><span class="line">              e.onNext(<span class="string">"产生事件3"</span>);</span><br><span class="line">              System.out.println( <span class="string">"Observable emit 3"</span> + <span class="string">"\n"</span>);</span><br><span class="line">              e.onComplete();</span><br><span class="line">              e.onNext(<span class="string">"产生事件4"</span>);</span><br><span class="line">              System.out.println( <span class="string">"Observable emit 4"</span> + <span class="string">"\n"</span> );</span><br><span class="line">	&#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="2-1-2步骤2：创建观察者-（Observer）并定义响应事件的行为"><a href="#2-1-2步骤2：创建观察者-（Observer）并定义响应事件的行为" class="headerlink" title="2.1.2步骤2：创建观察者 （Observer）并定义响应事件的行为"></a>2.1.2步骤2：创建观察者 （<strong><font color="#ff0000">Observer</font></strong>）并定义响应事件的行为</h3><ul>
+<li><p>发生的事件类型包括：Next事件、Complete事件 &amp; Error事件。具体如下：<br><em>本想通过表格实现的，发现md表格不能合并单元格，后来通过html实现，发现发布后页面格式变了(⊙o⊙)…要是哪个小伙伴知道这么直接在md文件里绘制这样的表格，希望不吝赐教o(</em>￣︶￣<em>)o</em><br><img src="https://i.imgur.com/6vWBt7R.jpg" alt=""></p>
+</li>
+<li><p>具体实现</p>
+<ul>
+<li><p>方式1：采用Observer抽象接口</p>
+<ul>
+<li>创建观察者(Observer)对象<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Observer&lt;String&gt; observer = <span class="keyword">new</span> Observer&lt;String&gt;() &#123;</span><br><span class="line">	<span class="comment">// 观察者接收事件前，默认最先调用复写 onSubscribe()</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSubscribe</span><span class="params">(@NonNull Disposable d)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// onSubscribe 是2.x新添加的方法，在发射数据前被调用，相当于1.x的onStart方法</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onComplete</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 对Complete事件作出响应，如上面事件类型详细介绍里的，被观察者可以不发送该事件</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(@NonNull Throwable arg0)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// onError事件作出响应，如上面事件类型详细介绍里的，被观察者也可以不发送该事件</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(@NonNull String arg0)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 对onNext事件作出响应，被观察者可以发送多个该事件</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>方式2：采用Subscriber接口</p>
+<ul>
+<li>创建观察者(Observer)对象<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Subscriber&lt;String&gt; subscriber = <span class="keyword">new</span> Subscriber&lt;String&gt;() &#123;</span><br><span class="line">		<span class="comment">// 观察者接收事件前，默认最先调用复写 onSubscribe()</span></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSubscribe</span><span class="params">(@NonNull Disposable d)</span> </span>&#123;</span><br><span class="line">			<span class="comment">// onSubscribe 是2.x新添加的方法，在发射数据前被调用，相当于1.x的onStart方法</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onComplete</span><span class="params">()</span> </span>&#123;</span><br><span class="line">			<span class="comment">// 对Complete事件作出响应，如上面事件类型详细介绍里的，被观察者可以不发送该事件</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(@NonNull Throwable arg0)</span> </span>&#123;</span><br><span class="line">			<span class="comment">// onError事件作出响应，如上面事件类型详细介绍里的，被观察者也可以不发送该事件</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(@NonNull String arg0)</span> </span>&#123;</span><br><span class="line">			<span class="comment">// 对onNext事件作出响应，被观察者可以发送多个该事件</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-1-3-步骤3：订阅事件-Subscribe-连接观察者与被观察者"><a href="#2-1-3-步骤3：订阅事件-Subscribe-连接观察者与被观察者" class="headerlink" title="2.1.3 步骤3：订阅事件(Subscribe),连接观察者与被观察者"></a>2.1.3 步骤3：订阅事件(<strong><font color="#ff0000">Subscribe</font></strong>),连接观察者与被观察者</h3><p>通过上面两步我们已经成功创建了观察者<code>Observer</code>和被观察者<code>Observable</code>，但他们目前两对是独立的，我们需要通过<code>Subscribe</code>来连接这两个对象，实现方式只需要一行代码就可以：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">observable.subscribe(observer);<span class="comment">//对于观察者采用Observer抽象接口实现</span></span><br></pre></td></tr></table></figure></p>
+<p>需要注意的是<strong><font color="#ff0000"><del>observable.subscribe(subscriber)</del></font></strong>这个在RxJava2.X里使用是会报错的,小伙伴们或许会问那我要是想用Subscriber该怎么办呢？你要是这样问，那我只能说你没认真看哦~一开始讲基本概念时候特地强调了<strong><font color="#ff0000">Subscriber要与Flowable联合使用</font></strong>，所以具体的实现方式如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//我们需要修改被观察者的实现方式，采用Flowable</span></span><br><span class="line">Flowable&lt;String&gt; flowable = Flowable.create(<span class="keyword">new</span> FlowableOnSubscribe&lt;String&gt;() &#123;</span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(@NonNull FlowableEmitter&lt;String&gt; e)</span></span></span><br><span class="line"><span class="function">					<span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">				<span class="comment">//实现方式跟observable里一样滴</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;, BackpressureStrategy.ERROR);<span class="comment">//需要注意的是这里增加了一个参数，Flowable具体讲解在后续会介绍</span></span><br><span class="line">flowable.subscribe(subscriber);<span class="comment">//对于观察者采用Subscriber接口实现时连接观察者跟被观察者的方式</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="2-2-实现方式2：基于事件流的链式实现"><a href="#2-2-实现方式2：基于事件流的链式实现" class="headerlink" title="2.2 实现方式2：基于事件流的链式实现"></a>2.2 实现方式2：基于事件流的链式实现</h2><ul>
+<li>方式1的实现方式是为了从基本概念上来说明Rxjava的原理和使用观察者模式各大参与者的角度的方式实现</li>
+<li>在实际应用中，会将上述步骤和代码连在一起，从而体现RxJava的简洁、优雅，即所谓的 RxJava基于事件流的链式调用,实现方式如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Observable.create(<span class="keyword">new</span> ObservableOnSubscribe&lt;String&gt;() &#123;</span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(@NonNull ObservableEmitter&lt;String&gt; e)</span></span></span><br><span class="line"><span class="function">					<span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">				<span class="comment">//生产事件，实现方式跟方式一一致</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;).subscribe(<span class="keyword">new</span> Observer&lt;String&gt;() &#123;</span><br><span class="line">			<span class="comment">// 观察者接收事件前，默认最先调用复写 onSubscribe()</span></span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSubscribe</span><span class="params">(@NonNull Disposable d)</span> </span>&#123;</span><br><span class="line">				<span class="comment">// onSubscribe 是2.x新添加的方法，在发射数据前被调用，相当于1.x的onStart方法</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onComplete</span><span class="params">()</span> </span>&#123;</span><br><span class="line">				<span class="comment">// 对Complete事件作出响应，如上面事件类型详细介绍里的，被观察者可以不发送该事件</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(@NonNull Throwable arg0)</span> </span>&#123;</span><br><span class="line">				<span class="comment">// onError事件作出响应，如上面事件类型详细介绍里的，被观察者也可以不发送该事件</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(@NonNull String arg0)</span> </span>&#123;</span><br><span class="line">				<span class="comment">// 对onNext事件作出响应，被观察者可以发送多个该事件</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h1 id="3-额外说明"><a href="#3-额外说明" class="headerlink" title="3. 额外说明"></a>3. 额外说明</h1><h2 id="3-1-观察者-Observer的subscribe-具备多个重载的方法"><a href="#3-1-观察者-Observer的subscribe-具备多个重载的方法" class="headerlink" title="3.1 观察者 Observer的subscribe()具备多个重载的方法"></a>3.1 观察者 Observer的subscribe()具备多个重载的方法</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title">subscribe</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="comment">// 表示观察者不对被观察者发送的事件作出任何响应（但被观察者还是可以继续发送事件）</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title">subscribe</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; onNext)</span> </span>&#123;&#125;</span><br><span class="line"><span class="comment">// 表示观察者只对被观察者发送的Next事件作出响应</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title">subscribe</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; onNext, Consumer&lt;? <span class="keyword">super</span> Throwable&gt; onError)</span> </span>&#123;&#125; </span><br><span class="line"><span class="comment">// 表示观察者只对被观察者发送的Next事件 &amp; Error事件作出响应</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title">subscribe</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; onNext, Consumer&lt;? <span class="keyword">super</span> Throwable&gt; onError, Action onComplete)</span> </span>&#123;&#125;</span><br><span class="line"><span class="comment">// 表示观察者只对被观察者发送的Next事件、Error事件 &amp; Complete事件作出响应</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title">subscribe</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; onNext, Consumer&lt;? <span class="keyword">super</span> Throwable&gt; onError, Action onComplete, Consumer&lt;? <span class="keyword">super</span> Disposable&gt; onSubscribe)</span> </span>&#123;&#125;</span><br><span class="line"><span class="comment">// 表示观察者只对被观察者发送的Next事件、Error事件 、Complete事件 &amp; onSubscribe事件作出响应</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Observer&lt;? <span class="keyword">super</span> T&gt; observer)</span> </span>&#123;&#125;</span><br><span class="line"><span class="comment">// 表示观察者对被观察者发送的任何事件都作出响应</span></span><br></pre></td></tr></table></figure>
+<h2 id="3-2可采用-Disposable-dispose-切断观察者与被观察者之间的连接"><a href="#3-2可采用-Disposable-dispose-切断观察者与被观察者之间的连接" class="headerlink" title="3.2可采用 Disposable.dispose()切断观察者与被观察者之间的连接"></a>3.2可采用 Disposable.dispose()切断观察者与被观察者之间的连接</h2><ul>
+<li>即观察者无法继续接收被观察者的事件，但被观察者还是可以继续发送事件</li>
+<li><p>具体使用</p>
+<ul>
+<li><p>1.定义<code>Disposable</code>类变量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Disposable mDisposable;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>2.对<code>Disposable</code>类变量赋值</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建观察者时，对Disposable类变量赋值</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSubscribe</span><span class="params">(Disposable d)</span> </span>&#123;</span><br><span class="line">		mDisposable = d;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>3.设置在<code>符合条件</code>的事件发生后切断观察者和被观察者的连接</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(@NonNull Integer integer)</span> </span>&#123;</span><br><span class="line">       i++;</span><br><span class="line">       <span class="keyword">if</span> (i == <span class="number">2</span>) &#123;</span><br><span class="line">           <span class="comment">// 在RxJava 2.x 中，新增的Disposable可以做到切断的操作，让Observer观察者不再接收上游事件</span></span><br><span class="line">           mDisposable.dispose();</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>以上仅仅是介绍RxJava2.X的基本概念与使用方式。通过本篇文章，可以对RxJava有个简单的了解。后面我会继续介绍RxJava中线程调度以及操作符等内容。</em></p>
+
+    </article>
+    <!-- 前后页  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC8zNDg2MS8xMTM5OA==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!--PC版-->
+
+    <!--PC版-->
+
+
+    
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:wolf_tian@qq.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/wolf-tian" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+    
+        
+            
+                <span class="iconfont-archer qq" title=qq>
+                  
+                  <img class="profile-qr" src="/assets/qq_img.png" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+        <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span>
+        </span>
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-基本概念"><span class="toc-number">1.</span> <span class="toc-text">1.基本概念</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-基本使用"><span class="toc-number">2.</span> <span class="toc-text">2. 基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-实现方式1：分步实现"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 实现方式1：分步实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-1步骤1：创建被观察者-Observable-并生产事件"><span class="toc-number">2.1.1.</span> <span class="toc-text">2.1.1步骤1：创建被观察者(Observable)并生产事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-2步骤2：创建观察者-（Observer）并定义响应事件的行为"><span class="toc-number">2.1.2.</span> <span class="toc-text">2.1.2步骤2：创建观察者 （Observer）并定义响应事件的行为</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-3-步骤3：订阅事件-Subscribe-连接观察者与被观察者"><span class="toc-number">2.1.3.</span> <span class="toc-text">2.1.3 步骤3：订阅事件(Subscribe),连接观察者与被观察者</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-实现方式2：基于事件流的链式实现"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 实现方式2：基于事件流的链式实现</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-额外说明"><span class="toc-number">3.</span> <span class="toc-text">3. 额外说明</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-观察者-Observer的subscribe-具备多个重载的方法"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 观察者 Observer的subscribe()具备多个重载的方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2可采用-Disposable-dispose-切断观察者与被观察者之间的连接"><span class="toc-number">3.2.</span> <span class="toc-text">3.2可采用 Disposable.dispose()切断观察者与被观察者之间的连接</span></a></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-archive"> Total : 1 </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> Invalid date </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/03/13/RxJava2.X基本用法(一)/" >RXJava 2.X基本用法(一)</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: '/',
+        author: 'wolf_tian'
+    }
+</script>
+    <!-- busuanzi  -->
+    
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+    
+    </body>
+</html>
+
+
