@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+    <!-- title -->
+
+
+
+
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
+    <title>RxJava 2.X基本用法(二) · wolf_tian 的个人博客</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+        box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.7);
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s 1;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= /css/style.css?v=20180311 as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" type="text/css" href= /css/mobile.css?v=20180311 media="(max-width: 980px)"/>
+    <link rel="icon" href= /assets/psu1.jpg>
+    <script>
+  // load webfont-loader async, and add callback function
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+  
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntroTags = document.getElementsByClassName('post-intro-tags')[0],
+        postIntroMeat = document.getElementsByClassName('post-intro-meta')[0];
+      if (postIntroTags) {
+        postIntroTags.classList.add('post-fade-in');
+      }
+      if (postIntroMeat) {
+        postIntroMeat.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  async("https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", asyncCb)
+</script>
+    <script>
+        (function (w) {
+            "use strict";
+            // rel=preload support test
+            if (!w.loadCSS) {
+                w.loadCSS = function () { };
+            }
+            // define on the loadCSS obj
+            var rp = loadCSS.relpreload = {};
+            // rel=preload feature support test
+            // runs once and returns a function for compat purposes
+            rp.support = (function () {
+                var ret;
+                try {
+                    ret = w.document.createElement("link").relList.supports("preload");
+                } catch (e) {
+                    ret = false;
+                }
+                return function () {
+                    return ret;
+                };
+            })();
+
+            // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+            // then change that media back to its intended value on load
+            rp.bindMediaToggle = function (link) {
+                // remember existing media attr for ultimate state, or default to 'all'
+                var finalMedia = link.media || "all";
+
+                function enableStylesheet() {
+                    link.media = finalMedia;
+                }
+
+                // bind load handlers to enable media
+                if (link.addEventListener) {
+                    link.addEventListener("load", enableStylesheet);
+                } else if (link.attachEvent) {
+                    link.attachEvent("onload", enableStylesheet);
+                }
+
+                // Set rel and non-applicable media type to start an async request
+                // note: timeout allows this to happen async to let rendering continue in IE
+                setTimeout(function () {
+                    link.rel = "stylesheet";
+                    link.media = "only x";
+                });
+                // also enable media after 3 seconds,
+                // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+                setTimeout(enableStylesheet, 3000);
+            };
+
+            // loop through link elements in DOM
+            rp.poly = function () {
+                // double check this to prevent external calls from running
+                if (rp.support()) {
+                    return;
+                }
+                var links = w.document.getElementsByTagName("link");
+                for (var i = 0; i < links.length; i++) {
+                    var link = links[i];
+                    // qualify links to those with rel=preload and as=style attrs
+                    if (link.rel === "preload" && link.getAttribute("as") === "style" && !link.getAttribute("data-loadcss")) {
+                        // prevent rerunning on link
+                        link.setAttribute("data-loadcss", true);
+                        // bind listeners to toggle media back
+                        rp.bindMediaToggle(link);
+                    }
+                }
+            };
+
+            // if unsupported, run the polyfill
+            if (!rp.support()) {
+                // run once at least
+                rp.poly();
+
+                // rerun poly on an interval until onload
+                var run = w.setInterval(rp.poly, 500);
+                if (w.addEventListener) {
+                    w.addEventListener("load", function () {
+                        rp.poly();
+                        w.clearInterval(run);
+                    });
+                } else if (w.attachEvent) {
+                    w.attachEvent("onload", function () {
+                        rp.poly();
+                        w.clearInterval(run);
+                    });
+                }
+            }
+            // commonjs
+            if (typeof exports !== "undefined") {
+                exports.loadCSS = loadCSS;
+            }
+            else {
+                w.loadCSS = loadCSS;
+            }
+        }(typeof global !== "undefined" ? global : this));
+    </script>
+    <script src="//cdn.staticfile.org/jquery/3.2.1/jquery.min.js" defer></script>
+    <script src="/scripts/main.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >wolf_tian 的博客.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">RxJava 2.X基本用法(二)</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>wolf_tian 的博客.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style=
+
+
+
+
+
+
+
+
+height:50vh;
+
+>
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            RxJava 2.X基本用法(二)
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <!-- 文章页标签  -->
+            
+            <div class="post-intro-meta">
+                <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                <span class="post-intro-time">2018/03/15</span>
+                
+                <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                    <span class="iconfont-archer">&#xe602;</span>
+                    <span id="busuanzi_value_page_pv"></span>
+                </span>
+                
+                <span class="shareWrapper">
+                    <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                    <span class="shareText">Share</span>
+                    <ul class="shareList">
+                        <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                            <div class="share-qrcode"></div>
+                        </li>
+                        <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                        <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                        <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                        <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                    </ul>
+                </span>
+            </div>
+        
+    </div>
+</div>
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>上一节教程讲解了RxJava 2.X最基本的概念和用法，如何你没看过，可以移步<a href="https://wolf-tian.github.io/2018/03/13/RxJava2.X%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95(%E4%B8%80)/" title="RxJava2.X基本用法(一)" target="_blank" rel="noopener">RxJava2.X基本用法(一)</a>, 在本节中, 我们将学习RxJava强大的操作符。操作符就是用于在Observable和最终的Observer之间，通过操作符转换Observable为其他观察者对象修改或组合发出的事件，将转化后最终最简洁便捷的数据传递给Observer对象。这一篇我们开始聊聊RxJava中的操作符(Operators)，RxJava中的操作符主要分成了三类：</p>
+<ul>
+<li>1.转换类操作符(<code>map</code> <code>flatMap</code> <code>concatMap</code> <code>flatMapIterable</code> <code>switchMap</code> <code>scan</code> <code>groupBy</code>…)</li>
+<li>2.过滤类操作符(<code>fileter</code> <code>take</code> <code>takeLast</code> <code>takeUntil</code> <code>distinct</code> <code>distinctUntilChanged</code> <code>skip</code> <code>skipLast</code> …)</li>
+<li>3.组合类操作符(<code>mergeWith</code> <code>zip</code> <code>join</code> <code>switchMap</code> <code>startWith</code>…)</li>
+</ul>
+<p>当然这一篇我也不可能介绍这么多的操作符，我介绍几个常用的，没有介绍的大家可以查看官方文档或者其他文章</p>
+<h2 id="1-转换类操作符"><a href="#1-转换类操作符" class="headerlink" title="1.转换类操作符"></a>1.转换类操作符</h2><p>对于转换类操作符，我这边主要介绍一下<code>map</code> 和 <code>flatMap</code> ,<code>concatMap</code> 和 <code>flatMapIterable</code>会稍微提一下，下面我们进入正题。</p>
+<h3 id="1-1-Map"><a href="#1-1-Map" class="headerlink" title="1.1 Map"></a>1.1 Map</h3><p>map()是RxJava中最简单的一个变换操作符了,函数接受一个Function类型的参数,然后把这个Function应用到每一个由Observable发射的值上，将发射的值转换为我们期望的值。用图表示如下:<br><img src="https://i.imgur.com/SrdR57b.jpg" alt=""><br>图中map函数作用就是将圆形事件转换为矩形事件, 从而导致下游接收到的事件就变为了矩形.假设我们需要将字符串转化为它的长度，我们可以通过map这样实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Observable.create(<span class="keyword">new</span> ObservableOnSubscribe&lt;String&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(ObservableEmitter&lt;String&gt; emitter)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        emitter.onNext(<span class="string">"Hello"</span>);</span><br><span class="line">        emitter.onNext(<span class="string">"ObservableOnSubscribe"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">	&#125;).map(<span class="keyword">new</span> Function&lt;String, Integer&gt;() &#123;</span><br><span class="line">	    <span class="meta">@Override</span></span><br><span class="line">	    <span class="function"><span class="keyword">public</span> Integer <span class="title">apply</span><span class="params">(@NonNull String s)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	        <span class="keyword">return</span> s.length();</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;).subscribe(<span class="keyword">new</span> Consumer&lt;Integer&gt;() &#123;</span><br><span class="line">	    <span class="meta">@Override</span></span><br><span class="line">	    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(@NonNull Integer i)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	        System.out.println( <span class="string">"accept String length = "</span> + i);</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>在上游我们发送的是一个字符串, 而在下游我们接收的是Integerg类型, 中间起转换作用的就是map操作符, 运行结果为:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">accept String length = <span class="number">5</span></span><br><span class="line">accept String length = <span class="number">21</span></span><br></pre></td></tr></table></figure></p>
+<p><em>在此说明一下后续为了减少页面篇幅，简单的运行结果我将不再贴出，有需要的可以拷贝代码自己运行，不过还是建议你自己手动敲一遍增加一下印象</em></p>
+<h3 id="1-2-FlatMap"><a href="#1-2-FlatMap" class="headerlink" title="1.2 FlatMap"></a>1.2 FlatMap</h3><p><code>FlatMap</code>函数同样也是做转换的，但是作用跟<code>Map</code>却不一样,相对于<code>Map</code> <code>FlatMap</code>是一个非常强大的操作符，<code>FlatMap</code>的转换是将一个发送事件的Observable变换为多个发送事件的Observables，然后将它们发射的事件合并后放进一个单独的Observable里发给事件的接受端也就是observer.同样的用图表示如下:<br><img src="https://i.imgur.com/kgkF5C2.png" alt=""><br>图中flatMap函数作用就是将一个圆形事件转换为两个菱形事件, 从而导致下游接收到的事件就变为了多个菱形事件.假设我们取到了全国各省份的天气数据weathers,现在我们要输出每个市级的天气状况，你或许说我们可以这样实现:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Observable.fromIterable(weathers).subscribe(<span class="keyword">new</span> Consumer&lt;Weathers&gt;() &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Weathers weathers)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        List&lt;Weather&gt; datas = weathers.getDatas();</span><br><span class="line">        <span class="keyword">for</span> (Weather weather : datas)</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(<span class="string">"城市名："</span> + weather.getCityName());</span><br><span class="line">            System.out.println(<span class="string">"城市天气："</span> + weather.getCityWeather());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>如果我不想在Subscriber中使用for循环，而是希望Subscriber中直接传入单个的天气对象呢（因为这对于代码复用很重要）？用map()显然是不行的，因为map()是一对一的转化，而我现在的要求是一对多的转化。那么我们可以使用flatMap()把一个weathers转化成多个weather。此时我们可以这样实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Observable.fromIterable(weathers).flatMap(<span class="keyword">new</span> Function&lt;Weathers, Observable&lt;Weather&gt;&gt;() &#123;</span><br><span class="line">		<span class="meta">@NonNull</span></span><br><span class="line">		<span class="function"><span class="keyword">public</span> Observable&lt;Weather&gt; <span class="title">apply</span><span class="params">(@NonNull Weathers arg0)</span></span></span><br><span class="line"><span class="function">				<span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">			<span class="keyword">return</span> Observable.fromIterable(arg0.getDatas());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;).subscribe(<span class="keyword">new</span> Consumer&lt;Weather&gt;() &#123;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(@NonNull Weather weather)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">			System.out.println(<span class="string">"城市名："</span> + weather.getCityName());</span><br><span class="line">	        System.out.println(<span class="string">"城市天气："</span> + weather.getCityWeather());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;);</span><br></pre></td></tr></table></figure></p>
+<p><em>看完上面的代码,你或许会火上心头，你会说对于上述的例子，第二种方式代码量多了哇~你要这样想，我只能说图样图森破，方式二虽然代码量多了些，但他剔除了嵌套结构，使得整体的逻辑性更强。譬如要是我们在各地域里面有一个面积这个量，这里我们需要过滤一下面积大于某一值的，你是不是还要再for循环里加上if？可是方式二却不需要，只需要加上过滤操作符就可以实现，运用flatMap代码看起来非常优雅而且逻辑清晰，可以充分体现RxJava链式编程的优点。</em><br>flatMap的特点：经过flatMap操作变换后，最后输出的序列有可能是交错的，城市数据可能不能按照省份汇总在一起，因为flatMap最后合并结果采用的是merge操作符。如果要想经过变换后，最终输出的序列和原序列一致，那就会用到另外一个操作符，<code>concatMap</code>。</p>
+<h3 id="1-3-转换类操作符最后说明"><a href="#1-3-转换类操作符最后说明" class="headerlink" title="1.3 转换类操作符最后说明"></a>1.3 转换类操作符最后说明</h3><p>对于concatMap这边不详细讲解，因为他的用法跟flatMap是一样的，只是有一点，<code>concatMap</code> 最终输出的数据序列和原数据序列是一致，它是按顺序链接Observables，而不是合并(flatMap用的是合并)。<br><code>flatMapIterable()</code>和 <code>flatMap()</code>也几乎是一样的，不同的是flatMapIterable()它转化的多个Observable是使用Iterable作为源数据的。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Observable.fromIterable(weathers).flatMapIterable(<span class="keyword">new</span> Function&lt;Weathers, Iterable&lt;Weather&gt;&gt;() &#123;</span><br><span class="line">	    <span class="function"><span class="keyword">public</span> Iterable&lt;Weather&gt; <span class="title">apply</span><span class="params">(Weathers weathers)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	        <span class="keyword">return</span> weathers.getDatas();</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;).subscribe(<span class="keyword">new</span> Consumer&lt;Weather&gt;() &#123;</span><br><span class="line">	    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Weather weather)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	    	System.out.println(<span class="string">"城市名："</span> + weather.getCityName());</span><br><span class="line">	        System.out.println(<span class="string">"城市天气："</span> + weather.getCityWeather());</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;);</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-过滤类操作符"><a href="#2-过滤类操作符" class="headerlink" title="2.过滤类操作符"></a>2.过滤类操作符</h2><p>对于过滤类操作符，也采用上面的方式这边主要介绍一下<code>filter</code> 和 <code>take</code> ,<code>takeLast</code> 和 <code>takeUntil</code>会稍微提一下，下面我们进入正题。</p>
+<h3 id="2-1-filter"><a href="#2-1-filter" class="headerlink" title="2.1 filter"></a>2.1 filter</h3><p>filter(predicate)用来过滤观测序列中我们不想要的值，只返回满足条件的值，类似于我们常用的if判断条件我们看下原理图：<br><img src="https://i.imgur.com/KaPj6L4.png" alt=""><br>图中filter函数作用就是将一个发射多种图形事件过滤转化后下游只接受圆形事件的简单事件, 从而导致下游接收到的事件就变为了只有圆形事件事件.接着上面说的我们需要过滤一下面积大于某一值的地域，了解他的天气情况，这个时候你只需要在flatMap操作符之后加上过滤条件就可以，现在我们可以这样实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Observable.fromIterable(weathers).flatMap(<span class="keyword">new</span> Function&lt;Weathers, Observable&lt;Weather&gt;&gt;() &#123;</span><br><span class="line">		<span class="meta">@NonNull</span></span><br><span class="line">		<span class="function"><span class="keyword">public</span> Observable&lt;Weather&gt; <span class="title">apply</span><span class="params">(@NonNull Weathers arg0)</span></span></span><br><span class="line"><span class="function">				<span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">			<span class="keyword">return</span> Observable.fromIterable(arg0.getDatas());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;).filter(<span class="keyword">new</span> Predicate&lt;Weather&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">test</span><span class="params">(Weather weather)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> weather.getAcreage() &gt;= <span class="number">8</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).subscribe(<span class="keyword">new</span> Consumer&lt;Weather&gt;() &#123;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(@NonNull Weather weather)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">			System.out.println(<span class="string">"城市名："</span> + weather.getCityName());</span><br><span class="line">			System.out.println(<span class="string">"城市面积："</span> + weather.getAcreage());</span><br><span class="line">	        System.out.println(<span class="string">"城市天气："</span> + weather.getCityWeather());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;);</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-2-take"><a href="#2-2-take" class="headerlink" title="2.2 take"></a>2.2 take</h3><p>其实take操作符是一个系列性的操作符，它包含<code>take</code> <code>takeLast</code> <code>takeUntil</code> <code>takeWhile</code>…而且每一个操作符还有不同入参的方法，所以这边只是简单的聊一下take操作符,虽然简单也够日常开发的使用了，具体详细的有需要了解的可以去查看官方API或者自己去一个方法详细查看使用。<br>take操作符有三个如参方法：<br>我们先聊一下一个参数的：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">take(<span class="keyword">long</span> count) <span class="comment">//这个唯一的如参表示需要发射的最大个数。即从原始的序列中发射前n个元素。</span></span><br><span class="line"><span class="comment">//与之对应的就是</span></span><br><span class="line">takeLast(<span class="keyword">int</span> count)<span class="comment">//他与take相反它发射的是观测序列中后n个元素。</span></span><br></pre></td></tr></table></figure></p>
+<p>当我们去了解两个三个参数的时候我们发现后面的是采用对应如参的time方式创建Observable作为takeUntil的入参去过滤数据滴~，对应的我们可以看一下源码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发送给定时间内的数据</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Observable&lt;T&gt; <span class="title">take</span><span class="params">(<span class="keyword">long</span> time, TimeUnit unit)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> takeUntil(timer(time, unit));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//发送给定时间内的数据,并指定线程</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Observable&lt;T&gt; <span class="title">take</span><span class="params">(<span class="keyword">long</span> time, TimeUnit unit, Scheduler scheduler)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> takeUntil(timer(time, unit, scheduler));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>相对应的takeLast也有相应如参的方法,但takeLast有一个比take多的入参组合<font color="#ff0000"> boolean delayError </font>，这边对这个入参进行解释一下后就不再对takeLast进行详细介绍了</strong></p>
+<ul>
+<li><p>boolean delayError为true时，表示当当前Observable发送异常时该异常会被被延迟，直到下游元素被处理消耗完</p>
+</li>
+<li><p>boolean delayError为false时，表示当当前Observable的异常时该异常会被立即发送出去，下游未处理的的元素将被丢弃掉。</p>
+</li>
+</ul>
+<h3 id="2-2-takeUntil"><a href="#2-2-takeUntil" class="headerlink" title="2.2 takeUntil"></a>2.2 takeUntil</h3><p><code>takeUntil()</code>有两种类型个入参方法：</p>
+<ul>
+<li><code>takeUntil(ObservableSource&lt;U&gt; other)</code> 订阅并开始发射原始Observable，同时监视我们提供的第二个Observable。如果第二个Observable发射了一项数据或者发射了一个终止通知，takeUntil()返回的Observable会停止发射原始Observable并终止。我们来看一下原理图：<br><img src="https://i.imgur.com/o7TcfpL.png" alt=""></li>
+<li><code>takeUntil(Predicate&lt;? super T&gt; stopPredicate)</code>通过stopPredicate方法来判断是否需要终止发射数据。我们来看一下原理图：<br><img src="https://i.imgur.com/IQfc970.png" alt=""><br>通过上面两张原理图，我相信都不用多解释，小伙伴们都知道他们的用途了哇~<h2 id="3-组合类操作符"><a href="#3-组合类操作符" class="headerlink" title="3.组合类操作符"></a>3.组合类操作符</h2>对于组合类操作符，我们这边主要讲解一下用的最多的zip操作符，<code>zip</code>通过一个函数将多个Observable发送的事件结合到一起，然后发送这些组合到一起的事件. 首先我们来看一下原理图：<br><img src="https://i.imgur.com/UHbxiol.png" alt=""><br>PS：需要说明的是zip它严格按照顺序应用这个函数。它只发射与发射数据项最少的那个Observable一样多的数据。应用举例：譬如我们一个页面需要从两个接口，而只有当两个都正确获取到了数据之后才能进行展示, 这个时候就可以用Zip了，代码示例如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//首先我们取到了两个用户信息分别为：</span></span><br><span class="line">Observable&lt;Info1&gt; info1observable;</span><br><span class="line">Observable&lt;Info2&gt; info2observable;</span><br><span class="line">然后通过zip操作符我们采用合并方式处理数据</span><br><span class="line">Observable.zip(observable1, observable2,</span><br><span class="line">        <span class="keyword">new</span> BiFunction&lt;info1observable, info2observable, Info&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Info <span class="title">apply</span><span class="params">(Info1 info1,</span></span></span><br><span class="line"><span class="function"><span class="params">                                  Info2 info2)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">				<span class="comment">//数据合并方式</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> Info(info1, info2);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).observeOn(AndroidSchedulers.mainThread())</span><br><span class="line">        .subscribe(<span class="keyword">new</span> Consumer&lt;Info&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Info info)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">			<span class="comment">//拿到合并后的数据进行操作;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h1 id="放在最后"><a href="#放在最后" class="headerlink" title="放在最后"></a>放在最后</h1><p>操作符这一章节终于要进行到最后了，我尽量采用通俗易懂的方式给大家讲解，不过也不知道大家接受的怎么样。不过这边依然需要说明的是我们真正讲解的操作符相对于Rxjava来说只是九牛一毛，更多的操作符大家可以查看官方文档，同时也可以一边使用一边详细了解。</p>
+
+    </article>
+    <!-- 前后页  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2018/03/13/RxJava2.X基本用法(一)/" title= RXJava 2.X基本用法(一) >
+                    <div class="prevTitle">RXJava 2.X基本用法(一)</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC8zNDg2MS8xMTM5OA==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!--PC版-->
+
+    <!--PC版-->
+
+
+    
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:wolf_tian@qq.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/wolf-tian" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+    
+        
+            
+                <span class="iconfont-archer qq" title=qq>
+                  
+                  <img class="profile-qr" src="/assets/qq_img.png" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+        <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span>
+        </span>
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-转换类操作符"><span class="toc-number">1.1.</span> <span class="toc-text">1.转换类操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Map"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1 Map</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-FlatMap"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.2 FlatMap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-转换类操作符最后说明"><span class="toc-number">1.1.3.</span> <span class="toc-text">1.3 转换类操作符最后说明</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-过滤类操作符"><span class="toc-number">1.2.</span> <span class="toc-text">2.过滤类操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-filter"><span class="toc-number">1.2.1.</span> <span class="toc-text">2.1 filter</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-take"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.2 take</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-takeUntil"><span class="toc-number">1.2.3.</span> <span class="toc-text">2.2 takeUntil</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-组合类操作符"><span class="toc-number">1.3.</span> <span class="toc-text">3.组合类操作符</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#放在最后"><span class="toc-number">2.</span> <span class="toc-text">放在最后</span></a></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-archive"> Total : 2 </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/15</span><a class="archive-post-title" href= "/2018/03/15/RxJava2.X基本用法(二)/" >RxJava 2.X基本用法(二)</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> Invalid date </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/03/13/RxJava2.X基本用法(一)/" >RXJava 2.X基本用法(一)</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: '/',
+        author: 'wolf_tian'
+    }
+</script>
+    <!-- busuanzi  -->
+    
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+    
+    </body>
+</html>
+
+
