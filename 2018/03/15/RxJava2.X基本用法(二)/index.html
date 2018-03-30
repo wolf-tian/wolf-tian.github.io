@@ -351,6 +351,7 @@ height:50vh;
 <li>3.组合类操作符(<code>mergeWith</code> <code>zip</code> <code>join</code> <code>switchMap</code> <code>startWith</code>…)</li>
 </ul>
 <p>当然这一篇我也不可能介绍这么多的操作符，我介绍几个常用的，没有介绍的大家可以查看官方文档或者其他文章</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><p>下面我们将按照分类介绍几个常用操作符，没上车的小伙伴赶紧上车<img src="https://i.imgur.com/P6D4itg.gif" alt=""></p>
 <h2 id="1-转换类操作符"><a href="#1-转换类操作符" class="headerlink" title="1.转换类操作符"></a>1.转换类操作符</h2><p>对于转换类操作符，我这边主要介绍一下<code>map</code> 和 <code>flatMap</code> ,<code>concatMap</code> 和 <code>flatMapIterable</code>会稍微提一下，下面我们进入正题。</p>
 <h3 id="1-1-Map"><a href="#1-1-Map" class="headerlink" title="1.1 Map"></a>1.1 Map</h3><p>map()是RxJava中最简单的一个变换操作符了,函数接受一个Function类型的参数,然后把这个Function应用到每一个由Observable发射的值上，将发射的值转换为我们期望的值。用图表示如下:<br><img src="https://i.imgur.com/SrdR57b.jpg" alt=""><br>图中map函数作用就是将圆形事件转换为矩形事件, 从而导致下游接收到的事件就变为了矩形.假设我们需要将字符串转化为它的长度，我们可以通过map这样实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Observable.create(<span class="keyword">new</span> ObservableOnSubscribe&lt;String&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(ObservableEmitter&lt;String&gt; emitter)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        emitter.onNext(<span class="string">"Hello"</span>);</span><br><span class="line">        emitter.onNext(<span class="string">"ObservableOnSubscribe"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">	&#125;).map(<span class="keyword">new</span> Function&lt;String, Integer&gt;() &#123;</span><br><span class="line">	    <span class="meta">@Override</span></span><br><span class="line">	    <span class="function"><span class="keyword">public</span> Integer <span class="title">apply</span><span class="params">(@NonNull String s)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	        <span class="keyword">return</span> s.length();</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;).subscribe(<span class="keyword">new</span> Consumer&lt;Integer&gt;() &#123;</span><br><span class="line">	    <span class="meta">@Override</span></span><br><span class="line">	    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(@NonNull Integer i)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	        System.out.println( <span class="string">"accept String length = "</span> + i);</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;);</span><br></pre></td></tr></table></figure></p>
 <p>在上游我们发送的是一个字符串, 而在下游我们接收的是Integerg类型, 中间起转换作用的就是map操作符, 运行结果为:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">accept String length = <span class="number">5</span></span><br><span class="line">accept String length = <span class="number">21</span></span><br></pre></td></tr></table></figure></p>
@@ -382,6 +383,11 @@ height:50vh;
     <!-- 前后页  -->
     <ul class="post-paginator">
         <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2018/03/29/RxJava2.X基本用法(三)/" title= RXJava 2.X基本用法(三) >
+                    <div class="nextTitle">RXJava 2.X基本用法(三)</div>
+                </a>
             
         </li>
         <li class="previous">
@@ -509,7 +515,7 @@ top:50vh;
         <div class="toc-catalog">
             <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
         </div>
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-转换类操作符"><span class="toc-number">1.1.</span> <span class="toc-text">1.转换类操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Map"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1 Map</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-FlatMap"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.2 FlatMap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-转换类操作符最后说明"><span class="toc-number">1.1.3.</span> <span class="toc-text">1.3 转换类操作符最后说明</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-过滤类操作符"><span class="toc-number">1.2.</span> <span class="toc-text">2.过滤类操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-filter"><span class="toc-number">1.2.1.</span> <span class="toc-text">2.1 filter</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-take"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.2 take</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-takeUntil"><span class="toc-number">1.2.3.</span> <span class="toc-text">2.2 takeUntil</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-组合类操作符"><span class="toc-number">1.3.</span> <span class="toc-text">3.组合类操作符</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#放在最后"><span class="toc-number">2.</span> <span class="toc-text">放在最后</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#正文"><span class="toc-number">2.</span> <span class="toc-text">正文</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-转换类操作符"><span class="toc-number">2.1.</span> <span class="toc-text">1.转换类操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Map"><span class="toc-number">2.1.1.</span> <span class="toc-text">1.1 Map</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-FlatMap"><span class="toc-number">2.1.2.</span> <span class="toc-text">1.2 FlatMap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-转换类操作符最后说明"><span class="toc-number">2.1.3.</span> <span class="toc-text">1.3 转换类操作符最后说明</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-过滤类操作符"><span class="toc-number">2.2.</span> <span class="toc-text">2.过滤类操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-filter"><span class="toc-number">2.2.1.</span> <span class="toc-text">2.1 filter</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-take"><span class="toc-number">2.2.2.</span> <span class="toc-text">2.2 take</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-takeUntil"><span class="toc-number">2.2.3.</span> <span class="toc-text">2.2 takeUntil</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-组合类操作符"><span class="toc-number">2.3.</span> <span class="toc-text">3.组合类操作符</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#放在最后"><span class="toc-number">3.</span> <span class="toc-text">放在最后</span></a></li></ol>
     </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
@@ -540,7 +546,16 @@ top:50vh;
     
     
     
-    <div class="total-archive"> Total : 2 </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-archive"> Total : 3 </div>
     
     <div class="post-archive">
     
@@ -549,6 +564,11 @@ top:50vh;
     
     <div class="archive-year"> 2018 </div>
     <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/29</span><a class="archive-post-title" href= "/2018/03/29/RxJava2.X基本用法(三)/" >RXJava 2.X基本用法(三)</a>
+        </li>
     
     
         <li class="archive-post-item">

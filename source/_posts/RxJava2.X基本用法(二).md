@@ -8,6 +8,8 @@ title: RxJava 2.X基本用法(二)
 - 3.组合类操作符(`mergeWith` `zip` `join` `switchMap` `startWith`...)
 
 当然这一篇我也不可能介绍这么多的操作符，我介绍几个常用的，没有介绍的大家可以查看官方文档或者其他文章
+# 正文
+下面我们将按照分类介绍几个常用操作符，没上车的小伙伴赶紧上车![](https://i.imgur.com/P6D4itg.gif)
 ## 1.转换类操作符
 对于转换类操作符，我这边主要介绍一下`map` 和 `flatMap` ,`concatMap` 和 `flatMapIterable`会稍微提一下，下面我们进入正题。
 ### 1.1 Map
